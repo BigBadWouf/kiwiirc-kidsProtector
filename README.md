@@ -2,8 +2,8 @@
 
 ## KiwiIRC plugin for display warn message when query a kid  
 
-Copy kidsProtector in www/static/plugins folder  
-Add this to www/static/config.json  
+Copy ```kids-protector.js``` in ```www/static/plugins``` folder  
+Add this to ```www/static/config.json```  
 ```
 "plugins" : [  
     {"name": "kidsProtector", "url": "static/plugins/kids-protector.js"}  
