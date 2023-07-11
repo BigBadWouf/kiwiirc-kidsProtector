@@ -1,8 +1,9 @@
 kiwi.plugin('kidsProtector', function (kiwi, log) {
-    // Detect when other open query with you
+    // Detect new buffer (channel or query)
     kiwi.on("buffer.new", function (event) {
-        // Si le warn est activé
+        // If name don't start with # it's a query
         if (!event.buffer.name.startsWith('#')) {
+            // If warn is active
             if (kiwi.state.getSetting("settings.kids-protector.warnOnQuery")) {
                 // Get the user information
                 let user = kiwi.state.getUser(event.buffer.networkid, event.buffer.name);
