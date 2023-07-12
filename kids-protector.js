@@ -14,11 +14,11 @@ kiwi.plugin('kidsProtector', function (kiwi, log) {
                     // Send warning message
                     kiwi.state.addMessage(event.buffer, {
                         time: event.time,
-                        nick: 'ATTENTION',
+                        nick: 'EuropNet',
                         channel: null,
                         target: event.buffer.name,
-                        message: "\x02\x1f\x0304" + message + "\x02\x1f\x03",
-                        type: 'notice',
+                        message: `\x02\x1f\x0300 ${message} \x02\x1f\x03`,
+                        type: 'error',
                     });
                 }
             }
