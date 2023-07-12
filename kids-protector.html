@@ -1,0 +1,168 @@
+<template id="kidsProtector">
+    <div class="kiwi-appsettings">
+        <form class="u-form">
+            <div class="kiwi-appsettings-block">
+                <h3>Protection des mineurs</h3>
+                <div class="kiwi-appsettings-section kiwi-appsettings-messages">
+                    <label class="u-checkbox-wrapper">
+                        <span>Bloquer les pvs d'adulte</span>
+                        <input v-model="settingBlockAdultsPms" type="checkbox">
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+</template>
+<script>
+    'kiwi public';
+
+    /**
+     * Returns an object for a vuejs computated property on a state settings value
+     * This allows default settings from the server config, but overrides with user config
+     */
+    function bindSetting(settingName) {
+        return {
+            get: function settingGetter() {
+                return this.$state.setting(settingName);
+            },
+            set: function settingSetter(newVal) {
+                this.$state.setting(settingName, newVal);
+            },
+        };
+    }
+
+    const kidsProtector = {
+        template: '#kidsProtector',
+        computed: {
+            settingBlockAdultsPms: bindSetting('kids-protector.disableQueryFromAdult'),
+        },
+        methods: {
+            closeSettings: function closeSettings() {
+                this.$state.$emit('active.component');
+            },
+        }
+    };
+
+    kiwi.addTab('settings', 'Protection des mineurs', kidsProtector, {});
+
+    kiwi.plugin('kidsProtector', (kiwi, log) => {
+
+        // Detect new buffer (channel or query)
+        kiwi.on("buffer.new", event => {
+            // If name don't start with # it's a query
+            if (!event.buffer.name.startsWith('#')) {
+                if(kiwi.state.setting("kids-protector.disableQueryFromAdult")) {
+                    let user = kiwi.state.getUser(event.buffer.networkid, event.buffer.name);
+                    if (user && user.asl !== null && user.asl.a > kiwi.state.getSetting("settings.kids-protector.IgnoreAfterYearOld")) {
+                        event.buffer.setting('mute_sound', true);
+                        kiwi.state.removeBuffer(event.buffer);
+                    }
+                    
+                }
+                // If warn is active
+                if (kiwi.state.getSetting("settings.kids-protector.warnOnQuery")) {
+                    // Get the user information
+                    let user = kiwi.state.getUser(event.buffer.networkid, event.buffer.name);
+                    // If user have ASL Information
+                    if (user && user.asl !== null && user.asl.a < 18) {
+                        // Get message from settings
+                        let message = kiwi.state.getSetting("settings.kids-protector.warnMessage");
+                        // Send warning message
+                        kiwi.state.addMessage(event.buffer, {
+                            time: event.time,
+                            nick: '*',
+                            channel: null,
+                            target: event.buffer.name,
+                            message: `\x02\x1f\x0300 ${message} \x02\x1f\x03`,
+                            type: 'error',
+                        });
+                    }
+                }
+            }
+
+        });
+    });
+</script>
+<style lang="less">
+    .kiwi-appsettings {
+        box-sizing: border-box;
+        height: 100%;
+        overflow-y: auto;
+        padding: 0;
+        position: relative;
+
+        .u-form {
+            width: 100%;
+            overflow: hidden;
+        }
+    }
+
+    .u-form label.kiwi-appsettings-setting-language.kiwi-appsettings-setting-language {
+        display: flex;
+        margin-bottom: 2em;
+    }
+
+    .kiwi-appsettings .kiwi-appsettings-setting-scrollback input {
+        margin-right: 10px;
+        width: 80px;
+    }
+
+    .kiwi-appsettings .u-form label {
+        display: block;
+    }
+
+    .kiwi-appsettings .u-form label span {
+        text-align: left;
+        margin-left: 0;
+    }
+
+    .kiwi-appsettings-block {
+        max-width: 400px;
+        width: auto;
+        display: block;
+        box-sizing: border-box;
+        margin: 20px auto 20px auto;
+    }
+
+    .kiwi-appsettings-block.kiwi-appsettings-block-advanced {
+        max-width: inherit;
+        margin: 20px;
+    }
+
+    .kiwi-appsettings-block h3 {
+        width: 100%;
+        line-height: 45px;
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+
+    .kiwi-appsettings-section {
+        padding: 10px;
+    }
+
+    @media screen and (max-width: 769px) {
+        .kiwi-appsettings {
+            width: 100%;
+            z-index: 999;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: left 0.5s;
+        }
+
+        .kiwi-appsettings .kiwi-appsettings-block {
+            width: 90%;
+        }
+
+        .kiwi-appsettings .u-form label span {
+            width: auto;
+            margin-right: 0;
+            display: inline-block;
+        }
+
+        .kiwi-appsettings-close,
+        .kiwi-appsettings-close i {
+            line-height: 46px;
+        }
+    }
+</style>
